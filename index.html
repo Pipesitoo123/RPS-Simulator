@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RPS Simulation</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial;
+    background: #111;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #controls {
+    display: flex;
+    gap: 10px;
+    margin: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #game {
+    position: relative;
+    width: 95vw;
+    height: 75vh;
+    border: 2px solid white;
+    background: #222;
+    overflow: hidden;
+  }
+
+  .emoji {
+    position: absolute;
+    font-size: 18px;
+  }
+
+  #counter {
+    margin: 5px;
+    padding: 5px 10px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 6px;
+  }
+
+  button {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  #countControls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,0,0,0.6);
+    padding: 5px 8px;
+    border-radius: 6px;
+  }
+
+  #countDisplay {
+    min-width: 30px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  #popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #popupContent {
+    background: #333;
+    padding: 20px;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h3>RPS Simulation</h3>
+
+<div id="controls">
+  <button onclick="startGame()">Start</button>
+  <button onclick="togglePause()" id="pauseBtn">Pause</button>
+
+  Speed:
+  <input type="range" id="speedSlider" min="2" max="15" value="6">
+
+  <div id="countControls">
+    Count:
+    <button onclick="changeCount(-1)">−</button>
+    <span id="countDisplay">24</span>
+    <button onclick="changeCount(1)">+</button>
+  </div>
+</div>
+
+<div id="counter">🪨 0 | 📄 0 | ✂️ 0</div>
+<div id="game"></div>
+
+<div id="popup">
+  <div id="popupContent">
+    <h2 id="winnerText"></h2>
+    <button onclick="startGame()">Restart</button>
+  </div>
+</div>
+
+<script>
+const game = document.getElementById("game");
+const counter = document.getElementById("counter");
+const popup = document.getElementById("popup");
+const winnerText = document.getElementById("winnerText");
+const slider = document.getElementById("speedSlider");
+const pauseBtn = document.getElementById("pauseBtn");
+const countDisplay = document.getElementById("countDisplay");
+
+let objects = [];
+let animation;
+let paused = false;
+let count = 24;
+
+const TYPES = ["🪨", "📄", "✂️"];
+const SIZE = 18;
+const RADIUS = 10;
+
+function changeCount(delta) {
+  count += delta;
+  if (count < 1) count = 1;
+  if (count > 32) count = 32;
+  countDisplay.innerText = count;
+}
+
+function startGame() {
+  cancelAnimationFrame(animation);
+  game.innerHTML = "";
+  popup.style.display = "none";
+  objects = [];
+  paused = false;
+  pauseBtn.innerText = "Pause";
+
+  for (let t of TYPES) {
+    for (let i = 0; i < count; i++) {
+      createObject(t);
+    }
+  }
+
+  updateCounter();
+  animate();
+}
+
+function togglePause() {
+  paused = !paused;
+  pauseBtn.innerText = paused ? "Resume" : "Pause";
+  if (!paused) animate();
+}
+
+function createObject(type) {
+  const el = document.createElement("div");
+  el.className = "emoji";
+  el.innerText = type;
+
+  const speed = slider.value;
+
+  const obj = {
+    el,
+    type,
+    x: Math.random() * (game.clientWidth - SIZE),
+    y: Math.random() * (game.clientHeight - SIZE),
+    vx: (Math.random() - 0.5) * speed,
+    vy: (Math.random() - 0.5) * speed
+  };
+
+  game.appendChild(el);
+  objects.push(obj);
+}
+
+function update() {
+  for (let obj of objects) {
+
+    obj.x += obj.vx;
+    obj.y += obj.vy;
+
+    if (obj.x <= 0) { obj.x = 0; obj.vx = Math.abs(obj.vx); }
+    if (obj.x >= game.clientWidth - SIZE) { obj.x = game.clientWidth - SIZE; obj.vx = -Math.abs(obj.vx); }
+    if (obj.y <= 0) { obj.y = 0; obj.vy = Math.abs(obj.vy); }
+    if (obj.y >= game.clientHeight - SIZE) { obj.y = game.clientHeight - SIZE; obj.vy = -Math.abs(obj.vy); }
+
+    obj.el.style.left = obj.x + "px";
+    obj.el.style.top = obj.y + "px";
+  }
+
+  handleCollisions();
+  updateCounter();
+  checkWinner();
+}
+
+function handleCollisions() {
+  for (let i = 0; i < objects.length; i++) {
+    for (let j = i + 1; j < objects.length; j++) {
+
+      let a = objects[i];
+      let b = objects[j];
+
+      let dx = a.x - b.x;
+      let dy = a.y - b.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist === 0) dist = 0.1;
+
+      if (dist < RADIUS * 2) {
+
+        let nx = dx / dist;
+        let ny = dy / dist;
+
+        let overlap = (RADIUS * 2) - dist;
+
+        a.x += nx * overlap/2;
+        a.y += ny * overlap/2;
+        b.x -= nx * overlap/2;
+        b.y -= ny * overlap/2;
+
+        let tx = a.vx;
+        let ty = a.vy;
+        a.vx = b.vx;
+        a.vy = b.vy;
+        b.vx = tx;
+        b.vy = ty;
+
+        const repel = 0.5;
+        a.vx += nx * repel;
+        a.vy += ny * repel;
+        b.vx -= nx * repel;
+        b.vy -= ny * repel;
+
+        resolveBattle(a, b);
+      }
+    }
+  }
+}
+
+function resolveBattle(a, b) {
+  if (a.type === b.type) return;
+
+  if (a.type === "🪨" && b.type === "✂️") b.type = "🪨";
+  else if (a.type === "✂️" && b.type === "🪨") a.type = "🪨";
+
+  else if (a.type === "✂️" && b.type === "📄") b.type = "✂️";
+  else if (a.type === "📄" && b.type === "✂️") a.type = "✂️";
+
+  else if (a.type === "📄" && b.type === "🪨") b.type = "📄";
+  else if (a.type === "🪨" && b.type === "📄") a.type = "📄";
+
+  a.el.innerText = a.type;
+  b.el.innerText = b.type;
+}
+
+function updateCounter() {
+  let r=0,p=0,s=0;
+  for (let o of objects) {
+    if (o.type==="🪨") r++;
+    else if (o.type==="📄") p++;
+    else s++;
+  }
+  counter.innerText = `🪨 ${r} | 📄 ${p} | ✂️ ${s}`;
+}
+
+function checkWinner() {
+  const first = objects[0].type;
+  if (objects.every(o => o.type === first)) {
+    cancelAnimationFrame(animation);
+    winnerText.innerText = "Winner: " + first;
+    popup.style.display = "flex";
+  }
+}
+
+function animate() {
+  if (paused) return;
+  update();
+  animation = requestAnimationFrame(animate);
+}
+</script>
+
+</body>
+</html>
