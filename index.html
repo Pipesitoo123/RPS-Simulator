@@ -16,9 +16,7 @@ body {
   align-items: center;
 }
 
-h3 {
-  margin: 6px 0;
-}
+h3 { margin: 6px 0; }
 
 #controls {
   display: flex;
@@ -93,13 +91,8 @@ input[type="range"] {
 }
 
 @media (max-width: 600px) {
-  button {
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-  .emoji {
-    font-size: 13px;
-  }
+  button { font-size: 13px; padding: 6px 10px; }
+  .emoji { font-size: 13px; }
 }
 </style>
 </head>
@@ -150,6 +143,7 @@ const TYPES = ["🪨", "📄", "✂️"];
 const SIZE = 14;
 const RADIUS = 8;
 
+// count control
 function changeCount(delta) {
   count += delta;
   if (count < 1) count = 1;
@@ -157,30 +151,10 @@ function changeCount(delta) {
   countDisplay.innerText = count;
 }
 
-// 🎚️ LIVE speed control
+// live speed adjust
 slider.addEventListener("input", () => {
-  let newSpeed = slider.value;
-  let factor = newSpeed / currentSpeed;
-
-  for (let obj of objects) {
-    obj.vx *= factor;
-    obj.vy *= factor;
-  }
-
-  currentSpeed = newSpeed;
+  currentSpeed = slider.value;
 });
-
-// 🧠 SPEED LIMIT FIX
-function limitSpeed(obj) {
-  let speed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
-  let max = currentSpeed;
-
-  if (speed > max) {
-    let scale = max / speed;
-    obj.vx *= scale;
-    obj.vy *= scale;
-  }
-}
 
 function startGame() {
   cancelAnimationFrame(animation);
@@ -212,15 +186,15 @@ function createObject(type) {
   el.className = "emoji";
   el.innerText = type;
 
-  const speed = slider.value;
+  let angle = Math.random() * Math.PI * 2;
 
   const obj = {
     el,
     type,
     x: Math.random() * (game.clientWidth - SIZE),
     y: Math.random() * (game.clientHeight - SIZE),
-    vx: (Math.random() - 0.5) * speed,
-    vy: (Math.random() - 0.5) * speed
+    vx: Math.cos(angle),
+    vy: Math.sin(angle)
   };
 
   game.appendChild(el);
@@ -230,9 +204,17 @@ function createObject(type) {
 function update() {
   for (let obj of objects) {
 
+    // ✅ CONSTANT SPEED (fixes everything)
+    let speed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+    if (speed === 0) speed = 0.1;
+
+    obj.vx = (obj.vx / speed) * currentSpeed;
+    obj.vy = (obj.vy / speed) * currentSpeed;
+
     obj.x += obj.vx;
     obj.y += obj.vy;
 
+    // walls
     if (obj.x <= 0) { obj.x = 0; obj.vx = Math.abs(obj.vx); }
     if (obj.x >= game.clientWidth - SIZE) { obj.x = game.clientWidth - SIZE; obj.vx = -Math.abs(obj.vx); }
     if (obj.y <= 0) { obj.y = 0; obj.vy = Math.abs(obj.vy); }
@@ -272,22 +254,13 @@ function handleCollisions() {
         b.x -= nx * overlap/2;
         b.y -= ny * overlap/2;
 
+        // bounce (swap direction only)
         let tx = a.vx;
         let ty = a.vy;
         a.vx = b.vx;
         a.vy = b.vy;
         b.vx = tx;
         b.vy = ty;
-
-        const repel = 0.5;
-        a.vx += nx * repel;
-        a.vy += ny * repel;
-        b.vx -= nx * repel;
-        b.vy -= ny * repel;
-
-        // ✅ FIX: prevent speed explosion
-        limitSpeed(a);
-        limitSpeed(b);
 
         resolveBattle(a, b);
       }
