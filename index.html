@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>RPS Simulation</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
   body {
     margin: 0;
@@ -14,55 +17,66 @@
     align-items: center;
   }
 
-  #controls {
-    display: flex;
-    gap: 10px;
-    margin: 5px;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  #game {
-    position: relative;
-    width: 95vw;
-    height: 75vh;
-    border: 2px solid white;
-    background: #222;
-    overflow: hidden;
-  }
-
-  .emoji {
-    position: absolute;
+  h3 {
+    margin: 6px 0;
     font-size: 18px;
   }
 
-  #counter {
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
     margin: 5px;
-    padding: 5px 10px;
-    background: rgba(0,0,0,0.6);
-    border-radius: 6px;
   }
 
   button {
-    padding: 6px 12px;
-    cursor: pointer;
+    padding: 8px 14px;
     font-size: 14px;
+    border-radius: 6px;
+  }
+
+  input[type="range"] {
+    width: 100px;
   }
 
   #countControls {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     background: rgba(0,0,0,0.6);
     padding: 5px 8px;
     border-radius: 6px;
   }
 
   #countDisplay {
-    min-width: 30px;
+    min-width: 25px;
     text-align: center;
     font-weight: bold;
+  }
+
+  #counter {
+    font-size: 14px;
+    margin: 5px;
+    padding: 5px 10px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 6px;
+  }
+
+  /* 🔥 FIXED GAME SIZE */
+  #game {
+    width: 95vw;
+    height: 65vh; /* smaller for phones */
+    max-height: 500px; /* prevents huge tablet box */
+    border: 2px solid white;
+    background: #222;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .emoji {
+    position: absolute;
+    font-size: 16px; /* slightly smaller */
   }
 
   #popup {
@@ -78,6 +92,27 @@
     background: #333;
     padding: 20px;
     border-radius: 10px;
+    text-align: center;
+  }
+
+  /* 📱 MOBILE BOOST */
+  @media (max-width: 600px) {
+    button {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
+    input[type="range"] {
+      width: 80px;
+    }
+
+    .emoji {
+      font-size: 14px;
+    }
+
+    #game {
+      height: 60vh;
+    }
   }
 </style>
 </head>
@@ -93,7 +128,6 @@
   <input type="range" id="speedSlider" min="2" max="15" value="6">
 
   <div id="countControls">
-    Count:
     <button onclick="changeCount(-1)">−</button>
     <span id="countDisplay">24</span>
     <button onclick="changeCount(1)">+</button>
@@ -125,8 +159,8 @@ let paused = false;
 let count = 24;
 
 const TYPES = ["🪨", "📄", "✂️"];
-const SIZE = 18;
-const RADIUS = 10;
+const SIZE = 16;
+const RADIUS = 9;
 
 function changeCount(delta) {
   count += delta;
