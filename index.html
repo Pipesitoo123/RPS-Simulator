@@ -150,7 +150,6 @@ const TYPES = ["🪨", "📄", "✂️"];
 const SIZE = 14;
 const RADIUS = 8;
 
-// ➕➖ count
 function changeCount(delta) {
   count += delta;
   if (count < 1) count = 1;
@@ -158,7 +157,7 @@ function changeCount(delta) {
   countDisplay.innerText = count;
 }
 
-// 🎚️ LIVE speed fix
+// 🎚️ LIVE speed control
 slider.addEventListener("input", () => {
   let newSpeed = slider.value;
   let factor = newSpeed / currentSpeed;
@@ -170,6 +169,18 @@ slider.addEventListener("input", () => {
 
   currentSpeed = newSpeed;
 });
+
+// 🧠 SPEED LIMIT FIX
+function limitSpeed(obj) {
+  let speed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+  let max = currentSpeed;
+
+  if (speed > max) {
+    let scale = max / speed;
+    obj.vx *= scale;
+    obj.vy *= scale;
+  }
+}
 
 function startGame() {
   cancelAnimationFrame(animation);
@@ -222,7 +233,6 @@ function update() {
     obj.x += obj.vx;
     obj.y += obj.vy;
 
-    // wall fix
     if (obj.x <= 0) { obj.x = 0; obj.vx = Math.abs(obj.vx); }
     if (obj.x >= game.clientWidth - SIZE) { obj.x = game.clientWidth - SIZE; obj.vx = -Math.abs(obj.vx); }
     if (obj.y <= 0) { obj.y = 0; obj.vy = Math.abs(obj.vy); }
@@ -275,6 +285,10 @@ function handleCollisions() {
         b.vx -= nx * repel;
         b.vy -= ny * repel;
 
+        // ✅ FIX: prevent speed explosion
+        limitSpeed(a);
+        limitSpeed(b);
+
         resolveBattle(a, b);
       }
     }
@@ -324,4 +338,4 @@ function animate() {
 </script>
 
 </body>
-</html>
+  </html>
