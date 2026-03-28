@@ -3,117 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <title>RPS Simulation</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  body {
-    margin: 0;
-    font-family: Arial;
-    background: #111;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #111;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  h3 {
-    margin: 6px 0;
-    font-size: 18px;
-  }
+h3 {
+  margin: 6px 0;
+}
 
-  #controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin: 5px;
-  }
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 5px;
+}
 
+button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+input[type="range"] {
+  width: 90px;
+}
+
+#countControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.6);
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+
+#countDisplay {
+  min-width: 25px;
+  text-align: center;
+  font-weight: bold;
+}
+
+#counter {
+  font-size: 14px;
+  margin: 5px;
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 6px;
+}
+
+#game {
+  width: 95vw;
+  height: 60vh;
+  max-height: 480px;
+  border: 2px solid white;
+  background: #222;
+  position: relative;
+  overflow: hidden;
+}
+
+.emoji {
+  position: absolute;
+  font-size: 14px;
+}
+
+#popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+#popupContent {
+  background: #333;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
   button {
-    padding: 8px 14px;
-    font-size: 14px;
-    border-radius: 6px;
+    font-size: 13px;
+    padding: 6px 10px;
   }
-
-  input[type="range"] {
-    width: 100px;
-  }
-
-  #countControls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(0,0,0,0.6);
-    padding: 5px 8px;
-    border-radius: 6px;
-  }
-
-  #countDisplay {
-    min-width: 25px;
-    text-align: center;
-    font-weight: bold;
-  }
-
-  #counter {
-    font-size: 14px;
-    margin: 5px;
-    padding: 5px 10px;
-    background: rgba(0,0,0,0.6);
-    border-radius: 6px;
-  }
-
-  /* 🔥 FIXED GAME SIZE */
-  #game {
-    width: 95vw;
-    height: 65vh; /* smaller for phones */
-    max-height: 500px; /* prevents huge tablet box */
-    border: 2px solid white;
-    background: #222;
-    position: relative;
-    overflow: hidden;
-  }
-
   .emoji {
-    position: absolute;
-    font-size: 16px; /* slightly smaller */
+    font-size: 13px;
   }
-
-  #popup {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    justify-content: center;
-    align-items: center;
-  }
-
-  #popupContent {
-    background: #333;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-  }
-
-  /* 📱 MOBILE BOOST */
-  @media (max-width: 600px) {
-    button {
-      font-size: 13px;
-      padding: 6px 10px;
-    }
-
-    input[type="range"] {
-      width: 80px;
-    }
-
-    .emoji {
-      font-size: 14px;
-    }
-
-    #game {
-      height: 60vh;
-    }
-  }
+}
 </style>
 </head>
 <body>
@@ -157,17 +144,32 @@ let objects = [];
 let animation;
 let paused = false;
 let count = 24;
+let currentSpeed = slider.value;
 
 const TYPES = ["🪨", "📄", "✂️"];
-const SIZE = 16;
-const RADIUS = 9;
+const SIZE = 14;
+const RADIUS = 8;
 
+// ➕➖ count
 function changeCount(delta) {
   count += delta;
   if (count < 1) count = 1;
   if (count > 32) count = 32;
   countDisplay.innerText = count;
 }
+
+// 🎚️ LIVE speed fix
+slider.addEventListener("input", () => {
+  let newSpeed = slider.value;
+  let factor = newSpeed / currentSpeed;
+
+  for (let obj of objects) {
+    obj.vx *= factor;
+    obj.vy *= factor;
+  }
+
+  currentSpeed = newSpeed;
+});
 
 function startGame() {
   cancelAnimationFrame(animation);
@@ -176,6 +178,7 @@ function startGame() {
   objects = [];
   paused = false;
   pauseBtn.innerText = "Pause";
+  currentSpeed = slider.value;
 
   for (let t of TYPES) {
     for (let i = 0; i < count; i++) {
@@ -219,6 +222,7 @@ function update() {
     obj.x += obj.vx;
     obj.y += obj.vy;
 
+    // wall fix
     if (obj.x <= 0) { obj.x = 0; obj.vx = Math.abs(obj.vx); }
     if (obj.x >= game.clientWidth - SIZE) { obj.x = game.clientWidth - SIZE; obj.vx = -Math.abs(obj.vx); }
     if (obj.y <= 0) { obj.y = 0; obj.vy = Math.abs(obj.vy); }
