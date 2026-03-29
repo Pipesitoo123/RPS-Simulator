@@ -45,12 +45,6 @@ input[type="range"] {
   border-radius: 6px;
 }
 
-#countDisplay {
-  min-width: 25px;
-  text-align: center;
-  font-weight: bold;
-}
-
 #counter {
   font-size: 14px;
   margin: 5px;
@@ -74,20 +68,14 @@ input[type="range"] {
   font-size: 14px;
 }
 
-/* 🔥 POPUP WITHOUT DARK BACKGROUND */
+/* popup */
 #popup {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-
-  background: transparent; /* no darkening */
-
+  inset: 0;
+  background: transparent;
   display: none;
   justify-content: center;
   align-items: center;
-
   z-index: 9999;
   pointer-events: none;
 }
@@ -98,9 +86,17 @@ input[type="range"] {
   border-radius: 10px;
   text-align: center;
   pointer-events: auto;
-
-  /* optional glow */
   box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+/* switch */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,0.6);
+  padding: 5px 8px;
+  border-radius: 6px;
 }
 
 @media (max-width: 600px) {
@@ -125,6 +121,13 @@ input[type="range"] {
     <span id="countDisplay">24</span>
     <button onclick="changeCount(1)">+</button>
   </div>
+
+  <!-- 🔥 SWITCH -->
+  <div class="switch">
+    🪨
+    <input type="checkbox" id="emojiSwitch">
+    ✊
+  </div>
 </div>
 
 <div id="counter">🪨 0 | 📄 0 | ✂️ 0</div>
@@ -145,6 +148,7 @@ const winnerText = document.getElementById("winnerText");
 const slider = document.getElementById("speedSlider");
 const pauseBtn = document.getElementById("pauseBtn");
 const countDisplay = document.getElementById("countDisplay");
+const emojiSwitch = document.getElementById("emojiSwitch");
 
 let objects = [];
 let animation;
@@ -152,7 +156,13 @@ let paused = false;
 let count = 24;
 let currentSpeed = slider.value;
 
-const TYPES = ["🪨", "📄", "✂️"];
+// 🔥 dynamic types
+function getTypes() {
+  return emojiSwitch.checked
+    ? ["✊", "✋", "✌️"]
+    : ["🪨", "📄", "✂️"];
+}
+
 const SIZE = 14;
 const RADIUS = 8;
 
@@ -175,6 +185,8 @@ function startGame() {
   paused = false;
   pauseBtn.innerText = "Pause";
   currentSpeed = slider.value;
+
+  const TYPES = getTypes();
 
   for (let t of TYPES) {
     for (let i = 0; i < count; i++) {
@@ -279,14 +291,17 @@ function handleCollisions() {
 function resolveBattle(a, b) {
   if (a.type === b.type) return;
 
-  if (a.type === "🪨" && b.type === "✂️") b.type = "🪨";
-  else if (a.type === "✂️" && b.type === "🪨") a.type = "🪨";
+  const types = getTypes();
 
-  else if (a.type === "✂️" && b.type === "📄") b.type = "✂️";
-  else if (a.type === "📄" && b.type === "✂️") a.type = "✂️";
+  // same logic but dynamic
+  if (a.type === types[0] && b.type === types[2]) b.type = types[0];
+  else if (a.type === types[2] && b.type === types[0]) a.type = types[0];
 
-  else if (a.type === "📄" && b.type === "🪨") b.type = "📄";
-  else if (a.type === "🪨" && b.type === "📄") a.type = "📄";
+  else if (a.type === types[2] && b.type === types[1]) b.type = types[2];
+  else if (a.type === types[1] && b.type === types[2]) a.type = types[2];
+
+  else if (a.type === types[1] && b.type === types[0]) b.type = types[1];
+  else if (a.type === types[0] && b.type === types[1]) a.type = types[1];
 
   a.el.innerText = a.type;
   b.el.innerText = b.type;
@@ -294,12 +309,15 @@ function resolveBattle(a, b) {
 
 function updateCounter() {
   let r=0,p=0,s=0;
+  const types = getTypes();
+
   for (let o of objects) {
-    if (o.type==="🪨") r++;
-    else if (o.type==="📄") p++;
+    if (o.type===types[0]) r++;
+    else if (o.type===types[1]) p++;
     else s++;
   }
-  counter.innerText = `🪨 ${r} | 📄 ${p} | ✂️ ${s}`;
+
+  counter.innerText = `${types[0]} ${r} | ${types[1]} ${p} | ${types[2]} ${s}`;
 }
 
 function checkWinner() {
@@ -319,4 +337,4 @@ function animate() {
 </script>
 
 </body>
-      </html>
+</html>
