@@ -68,6 +68,57 @@ input[type="range"] {
   font-size: 14px;
 }
 
+/* 🔘 SLIDER SWITCH */
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.6);
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+
+.switch {
+  position: relative;
+  width: 40px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sliderSwitch {
+  position: absolute;
+  inset: 0;
+  background: #555;
+  border-radius: 20px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.sliderSwitch::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  top: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .sliderSwitch {
+  background: #4caf50;
+}
+
+.switch input:checked + .sliderSwitch::before {
+  transform: translateX(20px);
+}
+
 /* popup */
 #popup {
   position: fixed;
@@ -87,16 +138,6 @@ input[type="range"] {
   text-align: center;
   pointer-events: auto;
   box-shadow: 0 0 20px rgba(255,255,255,0.3);
-}
-
-/* switch */
-.switch {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(0,0,0,0.6);
-  padding: 5px 8px;
-  border-radius: 6px;
 }
 
 @media (max-width: 600px) {
@@ -122,10 +163,13 @@ input[type="range"] {
     <button onclick="changeCount(1)">+</button>
   </div>
 
-  <!-- 🔥 SWITCH -->
-  <div class="switch">
+  <!-- 🔘 NEW SWITCH -->
+  <div class="switch-container">
     🪨
-    <input type="checkbox" id="emojiSwitch">
+    <label class="switch">
+      <input type="checkbox" id="emojiSwitch">
+      <span class="sliderSwitch"></span>
+    </label>
     ✊
   </div>
 </div>
@@ -156,15 +200,14 @@ let paused = false;
 let count = 24;
 let currentSpeed = slider.value;
 
-// 🔥 dynamic types
-function getTypes() {
-  return emojiSwitch.checked
-    ? ["✊", "✋", "✌️"]
-    : ["🪨", "📄", "✂️"];
-}
-
 const SIZE = 14;
 const RADIUS = 8;
+
+function getTypes() {
+  return emojiSwitch.checked
+    ? ["✊","✋","✌️"]
+    : ["🪨","📄","✂️"];
+}
 
 function changeCount(delta) {
   count += delta;
@@ -291,17 +334,16 @@ function handleCollisions() {
 function resolveBattle(a, b) {
   if (a.type === b.type) return;
 
-  const types = getTypes();
+  const t = getTypes();
 
-  // same logic but dynamic
-  if (a.type === types[0] && b.type === types[2]) b.type = types[0];
-  else if (a.type === types[2] && b.type === types[0]) a.type = types[0];
+  if (a.type === t[0] && b.type === t[2]) b.type = t[0];
+  else if (a.type === t[2] && b.type === t[0]) a.type = t[0];
 
-  else if (a.type === types[2] && b.type === types[1]) b.type = types[2];
-  else if (a.type === types[1] && b.type === types[2]) a.type = types[2];
+  else if (a.type === t[2] && b.type === t[1]) b.type = t[2];
+  else if (a.type === t[1] && b.type === t[2]) a.type = t[2];
 
-  else if (a.type === types[1] && b.type === types[0]) b.type = types[1];
-  else if (a.type === types[0] && b.type === types[1]) a.type = types[1];
+  else if (a.type === t[1] && b.type === t[0]) b.type = t[1];
+  else if (a.type === t[0] && b.type === t[1]) a.type = t[1];
 
   a.el.innerText = a.type;
   b.el.innerText = b.type;
@@ -309,15 +351,15 @@ function resolveBattle(a, b) {
 
 function updateCounter() {
   let r=0,p=0,s=0;
-  const types = getTypes();
+  const t = getTypes();
 
   for (let o of objects) {
-    if (o.type===types[0]) r++;
-    else if (o.type===types[1]) p++;
+    if (o.type===t[0]) r++;
+    else if (o.type===t[1]) p++;
     else s++;
   }
 
-  counter.innerText = `${types[0]} ${r} | ${types[1]} ${p} | ${types[2]} ${s}`;
+  counter.innerText = `${t[0]} ${r} | ${t[1]} ${p} | ${t[2]} ${s}`;
 }
 
 function checkWinner() {
