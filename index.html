@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RPS Simulator</title>
+<title>RPS Simulation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -74,22 +74,22 @@ input[type="range"] {
   font-size: 14px;
 }
 
-/* 🔥 FIXED POPUP */
+/* 🔥 POPUP WITHOUT DARK BACKGROUND */
 #popup {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.7);
+
+  background: transparent; /* no darkening */
 
   display: none;
   justify-content: center;
   align-items: center;
 
   z-index: 9999;
-
-  pointer-events: none; /* allow clicking behind */
+  pointer-events: none;
 }
 
 #popupContent {
@@ -97,8 +97,10 @@ input[type="range"] {
   padding: 20px;
   border-radius: 10px;
   text-align: center;
+  pointer-events: auto;
 
-  pointer-events: auto; /* only this is clickable */
+  /* optional glow */
+  box-shadow: 0 0 20px rgba(255,255,255,0.3);
 }
 
 @media (max-width: 600px) {
@@ -317,4 +319,4 @@ function animate() {
 </script>
 
 </body>
-  </html>
+      </html>
