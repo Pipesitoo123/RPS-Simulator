@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RPS Simulation</title>
+<title>RPS Simulator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -74,13 +74,22 @@ input[type="range"] {
   font-size: 14px;
 }
 
+/* 🔥 FIXED POPUP */
 #popup {
   position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+
   display: none;
   justify-content: center;
   align-items: center;
+
+  z-index: 9999;
+
+  pointer-events: none; /* allow clicking behind */
 }
 
 #popupContent {
@@ -88,6 +97,8 @@ input[type="range"] {
   padding: 20px;
   border-radius: 10px;
   text-align: center;
+
+  pointer-events: auto; /* only this is clickable */
 }
 
 @media (max-width: 600px) {
@@ -143,7 +154,6 @@ const TYPES = ["🪨", "📄", "✂️"];
 const SIZE = 14;
 const RADIUS = 8;
 
-// count control
 function changeCount(delta) {
   count += delta;
   if (count < 1) count = 1;
@@ -151,7 +161,6 @@ function changeCount(delta) {
   countDisplay.innerText = count;
 }
 
-// live speed adjust
 slider.addEventListener("input", () => {
   currentSpeed = slider.value;
 });
@@ -204,7 +213,6 @@ function createObject(type) {
 function update() {
   for (let obj of objects) {
 
-    // ✅ CONSTANT SPEED (fixes everything)
     let speed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
     if (speed === 0) speed = 0.1;
 
@@ -214,7 +222,6 @@ function update() {
     obj.x += obj.vx;
     obj.y += obj.vy;
 
-    // walls
     if (obj.x <= 0) { obj.x = 0; obj.vx = Math.abs(obj.vx); }
     if (obj.x >= game.clientWidth - SIZE) { obj.x = game.clientWidth - SIZE; obj.vx = -Math.abs(obj.vx); }
     if (obj.y <= 0) { obj.y = 0; obj.vy = Math.abs(obj.vy); }
@@ -254,7 +261,6 @@ function handleCollisions() {
         b.x -= nx * overlap/2;
         b.y -= ny * overlap/2;
 
-        // bounce (swap direction only)
         let tx = a.vx;
         let ty = a.vy;
         a.vx = b.vx;
